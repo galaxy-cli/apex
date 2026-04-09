@@ -1,49 +1,44 @@
-# PyQt5 Minimal Web Browser
-
-A minimal web browser application built with PyQt5 that includes a URL input bar and automatically installs PyQt5 if it's not already installed.
+# Pro PyQt5 Browser
+A lightweight, feature-rich web browser built with Python and PyQt5. This project features a native dark mode, built-in ad-blocking, and an intelligent auto-installer for Linux systems.
 
 ## Features
 
-- Simple and clean GUI using PyQt5.
-- URL bar to enter any website address dynamically.
-- Automatically installs PyQt5 and required modules if missing.
-- Loads a default website on startup (`http://www.google.com`).
-- Updates URL bar to reflect the current page.
-- Supports basic navigation by entering URLs manually.
+### Auto-Installer: 
+Detects missing dependencies and installs them via apt or pip automatically.
 
-## Requirements
+### Integrated Ad-Blocker: 
+Intercepts network requests to block common ad and tracking domains.
 
-- Python 3.x
-- Internet connection for installing PyQt5 (if not installed).
+### Dark Theme: 
+Custom QSS styling for a modern "Charcoal" desktop aesthetic.
 
-## How to Run
+### Smart Navigation:
+- Standard Back, Forward, Reload, and Home buttons.
+- URL bar defaults to HTTPS for security.
+- Automatic Google Search if a search term is entered instead of a URL.
 
-1. Clone or download this repository.
-2. Run the script with Python:
+### Progress Tracking: 
+Real-time loading bar and status updates.
 
-``python pyqt5-wrapper.py``
-   
-The script will check if PyQt5 packages are installed and, if not, automatically install them using pip before launching the browser.
+### Clean Console: 
+Silences noisy Chromium and libpng warnings for a cleaner terminal experience.
 
-## Code Overview
+## Getting Started
+PrerequisitesYou only need Python 3 installed. The script is designed to handle the rest.
 
-- `install_and_import(package)`: Checks for and installs missing packages.
-- `PyQt5Wrapper`: Main window class with a QWebEngineView and URL input toolbar.
-- URL bar allows entering and navigating to any web address.
-- Automatically prepends `http://` if the scheme is missing.
+### Running the Browser
+1. Clone or Download the script to your machine.
+2. Open your terminal in the script's folder.
+3. Run it:
+```
+python pyqt5-wrapper.py
+```
+### Note: 
+```
+On the first run, the script may ask for your sudo password to install the necessary sy# PyQt5 Minimal Web Browser
+```
+A minimal web browser application built with PyQt5 that includes a URL input bar and automatically installs PyQt5 if it's not already installed.
 
-## Notes
-
-- Make sure Python and pip are properly configured on your system.
-- The browser window is resizable and starts at 900x600 pixels.
-- This is a minimal example and doesn't include advanced browser features.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Author & Contact
-
-**galaxy-cli**
-
-GitHub: [https://github.com/galaxy-cli/pyqt5-wrapper](https://github.com/galaxy-cli/pyqt5-wrapper)
+### Built With
+- PyQt5 - The GUI framework.
+- QtWebEngine - The Chromium-based browser engine.
