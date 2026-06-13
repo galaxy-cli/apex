@@ -49,7 +49,9 @@ class ProBrowser(QMainWindow):
         super().__init__()
         self.setWindowTitle("Pro Browser")
         self.resize(1200, 800)
-        self.home_url = "https://google.com"
+        
+        # CHANGED: Updated homepage to DuckDuckGo
+        self.home_url = "https://duckduckgo.com"
 
         # Interceptor for Ad-Blocking
         self.interceptor = AdBlocker()
@@ -167,8 +169,9 @@ class ProBrowser(QMainWindow):
         
         if text.startswith("/") or text.startswith("localhost") or text.startswith("127.0.0.1"):
             url = f"http://{text}" if not text.startswith("/") else f"file://{text}"
+        # CHANGED: Updated the fallback search string to use DuckDuckGo
         elif "." not in text or " " in text:
-            url = f"https://google.com/search?q={urllib.parse.quote(text)}"
+            url = f"https://duckduckgo.com{urllib.parse.quote(text)}"
         else:
             url = text if text.startswith("http") else f"https://{text}"
 
