@@ -4,27 +4,58 @@ import os
 import subprocess
 import importlib.util
 import urllib.parse
-import signal  # Added for CTRL+C handling
+import signal
 
 # 1. SILENCE WARNINGS (libpng and JS deprecation)
 os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-logging"
 
-# 2. AUTO-INSTALLER
-def install_and_import(module_name, pip_name=None, apt_name=None):
-    if importlib.util.find_spec(module_name) is not None:
-        return
-    print(f"[*] Setting up {module_name}...")
-    if apt_name:
-        try:
-            subprocess.check_call(["sudo", "apt", "update"])
-            subprocess.check_call(["sudo", "apt", "install", "-y", apt_name])
-            if importlib.util.find_spec(module_name) is not None: return
-        except: pass
-    subprocess.check_call([sys.executable, "-m", "pip", "install", 
-                          pip_name or module_name, "--break-system-packages"])
+# 2. AUTO-INSTALLER (Optimized to batch apt operations and catch Ctrl+C safely)
+def run_auto_installer():
+    # Define required modules and their system/pip packages
+    requirements = [
+        {"module": "PyQt5", "pip": "PyQt5", "apt": "python3-pyqt5"},
+        {"module": "PyQt5.QtWebEngineWidgets", "pip": "PyQt5-QtWebEngine", "apt": "python3-pyqt5.qtwebengine"}
+    ]
+    
+    missing_apt_packages = []
+    missing_pip_packages = []
 
-install_and_import("PyQt5", apt_name="python3-pyqt5")
-install_and_import("PyQt5.QtWebEngineWidgets", pip_name="PyQt5-QtWebEngine", apt_name="python3-pyqt5.qtwebengine")
+    # Identify what is actually missing
+    for req in requirements:
+        if importlib.util.find_spec(req["module"]) is None:
+            if req["apt"]:
+                missing_apt_packages.append(req["apt"])
+            else:
+                missing_pip_packages.append(req["pip"])
+
+    # If everything is already installed, exit early
+    if not missing_apt_packages and not missing_pip_packages:
+        return
+
+    print("[*] Missing dependencies found. Starting setup...")
+    
+    try:
+        # 1. Run all APT installations in a single batch
+        if missing_apt_packages:
+            print(f"[*] System installing: {', '.join(missing_apt_packages)}")
+            subprocess.check_call(["sudo", "apt", "update"])
+            subprocess.check_call(["sudo", "apt", "install", "-y"] + missing_apt_packages)
+
+        # 2. Check what still needs PIP after APT runs
+        for req in requirements:
+            if importlib.util.find_spec(req["module"]) is None:
+                print(f"[*] Pip installing fallback: {req['pip']}")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", 
+                                      req["pip"], "--break-system-packages"])
+                
+    except KeyboardInterrupt:
+        print("\n[!] Setup cancelled by user (Ctrl+C). Exiting.")
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        print(f"\n[!] Dependency installation failed: {e}")
+
+# Run setup before importing GUI elements
+run_auto_installer()
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QToolBar, QLineEdit, 
                              QAction, QStyle, QProgressBar, QStatusBar, 
@@ -50,10 +81,7 @@ class ProBrowser(QMainWindow):
         self.setWindowTitle("Pro Browser")
         self.resize(1200, 800)
         
-        # CHANGED: Updated homepage to DuckDuckGo
         self.home_url = "https://duckduckgo.com"
-
-        # Interceptor for Ad-Blocking
         self.interceptor = AdBlocker()
 
         # Tabbed Engine Setup
@@ -87,8 +115,6 @@ class ProBrowser(QMainWindow):
         navtb.addWidget(self.url_bar)
 
         self.apply_theme()
-        
-        # Open Initial Tab
         self.add_new_tab(QUrl(self.home_url), "Homepage")
 
     def add_btn(self, tb, icon, label, slot):
@@ -122,7 +148,6 @@ class ProBrowser(QMainWindow):
         index = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(index)
 
-        # Cleaner Signal Routing
         browser.loadProgress.connect(lambda val: self.on_load_progress(browser, val))
         browser.urlChanged.connect(lambda url: self.on_url_changed(browser, url))
         browser.titleChanged.connect(lambda title: self.on_title_changed(browser, title))
@@ -169,7 +194,6 @@ class ProBrowser(QMainWindow):
         
         if text.startswith("/") or text.startswith("localhost") or text.startswith("127.0.0.1"):
             url = f"http://{text}" if not text.startswith("/") else f"file://{text}"
-        # CHANGED: Updated the fallback search string to use DuckDuckGo
         elif "." not in text or " " in text:
             url = f"https://duckduckgo.com{urllib.parse.quote(text)}"
         else:
@@ -196,6 +220,7 @@ class ProBrowser(QMainWindow):
         """)
 
 if __name__ == "__main__":
+    # Ensures Python handles Ctrl+C cleanly while the GUI app is running
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     
     app = QApplication(sys.argv)
